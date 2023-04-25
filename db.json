@@ -1,0 +1,19 @@
+{
+    "favorites": [
+      {
+        "id": 1,
+        "title": "Rounders",
+        "type": "movie"
+      },
+      {
+        "id": 2,
+        "title": "Ex Machina",
+        "type": "movie"
+      },
+      {
+        "id": 3,
+        "title": "Dracula",
+        "type": "book"
+      }
+    ]
+  }
