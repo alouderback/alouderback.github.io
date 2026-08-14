@@ -1,0 +1,6 @@
+dist
+node_modules
+.astro
+public/covers
+src/data/dora.json
+package-lock.json

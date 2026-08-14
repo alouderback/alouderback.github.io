@@ -1,0 +1,76 @@
+---
+interface Props {
+  label: string;
+  value: string;
+  unit?: string;
+  detail?: string;
+  band?: 'elite' | 'high' | 'medium' | 'low' | null;
+}
+
+const { label, value, unit, detail, band } = Astro.props;
+---
+
+<div class="metric card">
+  <p class="label">{label}</p>
+  <p class="value">
+    {value}{unit && <span class="unit">{unit}</span>}
+  </p>
+  {detail && <p class="detail">{detail}</p>}
+  {band && <span class={`band band--${band}`}>{band}</span>}
+</div>
+
+<style>
+  .metric {
+    position: relative;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+  .label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .value {
+    margin: 0.4rem 0 0;
+    font-size: 1.85rem;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .unit {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 0.28rem;
+    letter-spacing: 0;
+  }
+  .detail {
+    margin: 0.45rem 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .band {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 0.13rem 0.42rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+  }
+  .band--elite {
+    color: var(--accent-text);
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    background: var(--accent-soft);
+  }
+</style>

@@ -1,0 +1,106 @@
+name: Release notes
+
+# An agent in the release phase. Runs after Production deploys successfully.
+# Without an API key it still cuts a Release using GitHub's generated notes,
+# so the job is useful either way.
+on:
+  workflow_run:
+    workflows: [Deploy]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Cut a release
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Work out the commit range
+        id: range
+        run: |
+          PREVIOUS=$(git tag --list 'v*' --sort=-creatordate | head -n1)
+          if [ -z "$PREVIOUS" ]; then
+            RANGE=$(git rev-list --max-parents=0 HEAD | tail -n1)..HEAD
+            echo "::notice::No previous tag. Using the full history."
+          else
+            RANGE="${PREVIOUS}..HEAD"
+          fi
+          COUNT=$(git rev-list --count "$RANGE")
+          echo "previous=$PREVIOUS" >> "$GITHUB_OUTPUT"
+          echo "range=$RANGE" >> "$GITHUB_OUTPUT"
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "tag=v$(date -u +%Y.%m.%d)-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo 'log<<RANGE_EOF'
+            git log --no-merges --pretty=format:'- %s (%h)' "$RANGE"
+            echo ''
+            echo 'RANGE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check for the API key
+        id: key
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT";
+          else echo "enabled=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Write release notes with Claude
+        if: steps.key.outputs.enabled == 'true' && steps.range.outputs.count != '0'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COMMITS: ${{ steps.range.outputs.log }}
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          PROMPT=$(cat <<'EOF'
+          Write release notes for a personal resume site, from the commit list below.
+
+          Rules:
+          - Two to five short bullets grouped by what a reader would notice.
+          - Plain language. No em dashes. No "not X, it's Y" constructions.
+          - No marketing vocabulary (leverage, seamless, robust, elevate, unlock).
+          - Skip trivial commits such as formatting or dependency bumps unless
+            that is genuinely all that changed.
+          - Output only the notes as markdown. No preamble, no heading.
+
+          Commits:
+          EOF
+          )
+          printf '%s\n%s\n' "$PROMPT" "$COMMITS" > /tmp/prompt.txt
+          claude -p "$(cat /tmp/prompt.txt)" > /tmp/notes.md 2>/tmp/claude-err.txt || {
+            echo "::warning::Claude did not produce notes. Falling back to generated notes."
+            rm -f /tmp/notes.md
+            cat /tmp/claude-err.txt || true
+          }
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.range.outputs.tag }}
+          COUNT: ${{ steps.range.outputs.count }}
+        run: |
+          if [ "$COUNT" = "0" ]; then
+            echo "::notice::Nothing new since the last release. Skipping."
+            exit 0
+          fi
+
+          if [ -s /tmp/notes.md ]; then
+            printf '\n\n---\nProduction deploy of `%s`.\n' "${GITHUB_SHA}" >> /tmp/notes.md
+            gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md --target main
+            echo "::notice::Released $TAG with agent-written notes."
+          else
+            gh release create "$TAG" --title "$TAG" --generate-notes --target main
+            echo "::notice::Released $TAG with GitHub generated notes."
+          fi

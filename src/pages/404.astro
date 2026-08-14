@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/paths';
+import { ENV } from '../lib/env';
+---
+
+<BaseLayout title="Page not found" description="That page does not exist on this site.">
+  <section class="section wrap notfound">
+    <span class="eyebrow">404 · {ENV.name}</span>
+    <h1>That page does not exist</h1>
+    <p class="lede">
+      The link may be stale, or it may point at a different environment. Each environment serves
+      from its own path, so a Sandbox URL will not resolve in Production.
+    </p>
+    <div class="cta">
+      <a class="btn btn--primary" href={withBase('/')}>Back to the home page</a>
+      <a class="btn" href={withBase('/pipeline/')}>See the environment map</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding-block: clamp(3rem, 10vw, 6rem);
+  }
+  .cta {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-top: 1.8rem;
+  }
+</style>

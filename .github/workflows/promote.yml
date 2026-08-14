@@ -1,0 +1,92 @@
+name: Promote
+
+# The deliberate human gate between environments. Promotion is a pull request
+# so the change set moving up the pipeline stays visible and reviewable.
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        description: Which promotion to open
+        required: true
+        type: choice
+        options:
+          - dev to qa
+          - qa to main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  open-promotion-pr:
+    name: Open promotion pull request
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve head and base
+        id: refs
+        run: |
+          case "${{ inputs.path }}" in
+            "dev to qa")   HEAD=dev; BASE=qa   ;;
+            "qa to main")  HEAD=qa;  BASE=main ;;
+            *) echo "Unrecognised promotion path"; exit 1 ;;
+          esac
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      - name: Check there is something to promote
+        id: diff
+        run: |
+          HEAD='${{ steps.refs.outputs.head }}'
+          BASE='${{ steps.refs.outputs.base }}'
+          COUNT=$(git rev-list --count "origin/${BASE}..origin/${HEAD}")
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::notice::${HEAD} is already merged into ${BASE}. Nothing to promote."
+          fi
+          {
+            echo 'log<<PROMOTION_EOF'
+            git log --no-merges --pretty=format:'- %s (%h, %an)' "origin/${BASE}..origin/${HEAD}"
+            echo ''
+            echo 'PROMOTION_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open the pull request
+        if: steps.diff.outputs.count != '0'
+        env:
+          # Falls back to GITHUB_TOKEN. See the note in README about why a PAT
+          # is worth adding if you want CI to run on the promotion PR itself.
+          GH_TOKEN: ${{ secrets.PROMOTE_TOKEN || secrets.GITHUB_TOKEN }}
+          HEAD: ${{ steps.refs.outputs.head }}
+          BASE: ${{ steps.refs.outputs.base }}
+          COUNT: ${{ steps.diff.outputs.count }}
+          LOG: ${{ steps.diff.outputs.log }}
+        run: |
+          EXISTING=$(gh pr list --base "$BASE" --head "$HEAD" --state open --json number --jq '.[0].number // empty')
+          BODY=$(cat <<EOF
+          Promoting **${COUNT}** commit(s) from \`${HEAD}\` into \`${BASE}\`.
+
+          Merging this deploys the \`${BASE}\` environment automatically.
+
+          ## Commits being promoted
+
+          ${LOG}
+
+          ---
+          Opened by the \`promote.yml\` workflow.
+          EOF
+          )
+
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --body "$BODY"
+            echo "::notice::Updated existing promotion PR #${EXISTING}"
+          else
+            gh pr create \
+              --base "$BASE" \
+              --head "$HEAD" \
+              --title "Promote ${HEAD} to ${BASE} (${COUNT} commits)" \
+              --body "$BODY"
+          fi

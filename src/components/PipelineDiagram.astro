@@ -1,0 +1,195 @@
+---
+// Inline SVG so it inherits the theme tokens and needs no runtime library.
+const lanes = [
+  { x: 210, branch: 'dev', env: 'Sandbox', colour: 'var(--c-dev)', path: '/dev/' },
+  { x: 455, branch: 'qa', env: 'Test', colour: 'var(--c-qa)', path: '/qa/' },
+  { x: 700, branch: 'main', env: 'Production', colour: 'var(--c-prod)', path: '/' },
+];
+---
+
+<figure class="diagram">
+  <div class="scroller">
+    <svg viewBox="0 0 840 330" role="img" aria-labelledby="pipe-title pipe-desc">
+      <title id="pipe-title">Branch and deployment pipeline</title>
+      <desc id="pipe-desc">
+        Feature branches open pull requests into dev. Merging dev deploys the Sandbox environment. A
+        promotion pull request moves dev into qa, which deploys Test. A second promotion pull
+        request moves qa into main, which deploys Production.
+      </desc>
+
+      <defs>
+        <marker
+          id="arrow"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="7"
+          markerHeight="7"
+          orient="auto-start-reverse"
+        >
+          <path d="M0 0 10 5 0 10z" fill="var(--line)"></path>
+        </marker>
+      </defs>
+
+      {/* feature branch */}
+      <g>
+        <rect x="8" y="42" width="128" height="40" rx="8" class="node node--feature"></rect>
+        <text x="72" y="61" class="t-node" text-anchor="middle">feature/*</text>
+        <text x="72" y="75" class="t-sub" text-anchor="middle">fix/*</text>
+      </g>
+      <line x1="140" y1="62" x2="196" y2="62" class="line" marker-end="url(#arrow)"></line>
+      <text x="168" y="52" class="t-edge" text-anchor="middle">PR</text>
+
+      {/* branch lane, environment card, and the deploy edge between them */}
+      {
+        lanes.map((lane, i) => (
+          <g>
+            <rect
+              x={lane.x - 62}
+              y="42"
+              width="124"
+              height="40"
+              rx="8"
+              class="node"
+              style={`stroke:${lane.colour}`}
+            />
+            <circle cx={lane.x - 44} cy="62" r="4.5" fill={lane.colour} />
+            <text x={lane.x + 6} y="67" class="t-branch" text-anchor="middle">
+              {lane.branch}
+            </text>
+
+            <line
+              x1={lane.x}
+              y1="88"
+              x2={lane.x}
+              y2="176"
+              class="line line--dash"
+              marker-end="url(#arrow)"
+            />
+            <text x={lane.x + 8} y="118" class="t-edge">
+              CI
+            </text>
+            <text x={lane.x + 8} y="152" class="t-edge">
+              deploy
+            </text>
+
+            <rect
+              x={lane.x - 82}
+              y="182"
+              width="164"
+              height="76"
+              rx="10"
+              class="node node--env"
+              style={`stroke:${lane.colour}`}
+            />
+            <rect x={lane.x - 82} y="182" width="164" height="4" rx="2" fill={lane.colour} />
+            <text x={lane.x} y="212" class="t-env" text-anchor="middle">
+              {lane.env}
+            </text>
+            <text x={lane.x} y="232" class="t-sub" text-anchor="middle">
+              {lane.path}
+            </text>
+            <text x={lane.x} y="249" class="t-sub" text-anchor="middle">
+              github environment
+            </text>
+
+            {i < lanes.length - 1 && (
+              <>
+                <line
+                  x1={lane.x + 66}
+                  y1="62"
+                  x2={lanes[i + 1].x - 68}
+                  y2="62"
+                  class="line"
+                  marker-end="url(#arrow)"
+                />
+                <text x={lane.x + 122} y="52" class="t-edge" text-anchor="middle">
+                  promotion PR
+                </text>
+              </>
+            )}
+          </g>
+        ))
+      }
+
+      <text x="8" y="300" class="t-foot">
+        Every merge into a long-lived branch deploys that environment automatically.
+      </text>
+      <text x="8" y="318" class="t-foot">
+        Promotion between environments is a pull request, so the gate stays visible and reviewable.
+      </text>
+    </svg>
+  </div>
+</figure>
+
+<style>
+  .diagram {
+    margin: 0;
+    --c-dev: #8b5cf6;
+    --c-qa: #f59e0b;
+    --c-prod: #14b8a6;
+    --line: var(--border-strong);
+  }
+  .scroller {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    padding: 1.2rem;
+  }
+  svg {
+    display: block;
+    min-width: 720px;
+    width: 100%;
+    height: auto;
+  }
+  .node {
+    fill: var(--bg-subtle);
+    stroke: var(--border-strong);
+    stroke-width: 1.4;
+  }
+  .node--feature {
+    stroke-dasharray: 4 3;
+  }
+  .node--env {
+    fill: var(--surface-raised);
+  }
+  .line {
+    stroke: var(--line);
+    stroke-width: 1.5;
+  }
+  .line--dash {
+    stroke-dasharray: 5 4;
+  }
+  text {
+    font-family: var(--font-sans);
+    fill: var(--text);
+  }
+  .t-node {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .t-branch {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .t-env {
+    font-size: 15px;
+    font-weight: 650;
+  }
+  .t-sub {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--text-faint);
+  }
+  .t-edge {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    fill: var(--text-muted);
+  }
+  .t-foot {
+    font-size: 11.5px;
+    fill: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,83 @@
+---
+import '../styles/global.css';
+import { ENV } from '../lib/env';
+import { flag } from '../lib/flags';
+import { withBase } from '../lib/paths';
+import { profile } from '../data/profile';
+import EnvironmentBanner from '../components/EnvironmentBanner.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import BuildPanel from '../components/BuildPanel.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+const fullTitle = `${title} | ${profile.name}`;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? ENV.url).href;
+---
+
+<!doctype html>
+<html lang="en" data-env={ENV.key}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={withBase('/favicon.svg')} type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+
+    {/* Search engines should only ever index Production. */}
+    {!ENV.isProd && <meta name="robots" content="noindex, nofollow" />}
+
+    <script is:inline>
+      // Applied before first paint so the stored theme never flashes.
+      (function () {
+        try {
+          const t = localStorage.getItem('theme');
+          if (t === 'light' || t === 'dark') {
+            document.documentElement.setAttribute('data-theme', t);
+          }
+        } catch {
+          /* storage unavailable, fall back to the system preference */
+        }
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a href="#main" class="skip">Skip to content</a>
+    <EnvironmentBanner />
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    {flag('showBuildPanel') && <BuildPanel />}
+
+    <style>
+      .skip {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: var(--surface);
+        color: var(--text);
+        padding: 0.7rem 1rem;
+        border: 1px solid var(--accent);
+        border-radius: 0 0 var(--radius) 0;
+        z-index: 100;
+      }
+      .skip:focus {
+        left: 0;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+version: 2
+updates:
+  # Dependencies land in Sandbox first and get promoted like anything else.
+  - package-ecosystem: npm
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'chore(deps)'
+    groups:
+      astro:
+        patterns: ['astro', '@astrojs/*']
+      tooling:
+        patterns: ['eslint*', '@eslint/*', 'typescript*', 'prettier*', '@types/*', 'globals']
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: 'chore(actions)'

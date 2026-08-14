@@ -1,0 +1,8 @@
+# Everything is owned by Alex. Listed explicitly so review routing keeps
+# working if anyone else ever contributes.
+* @alouderback
+
+# The pipeline itself gets extra attention.
+/.github/workflows/ @alouderback
+/scripts/           @alouderback
+/site.config.mjs    @alouderback

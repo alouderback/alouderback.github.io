@@ -1,0 +1,44 @@
+{
+  "name": "resume-site",
+  "version": "1.0.0",
+  "description": "Alex Louderback's resume site, deployed through a three-environment CI/CD pipeline.",
+  "scripts": {
+    "dev": "ENV_NAME=dev astro dev",
+    "dev:qa": "ENV_NAME=qa astro dev",
+    "dev:prod": "ENV_NAME=prod astro dev",
+    "build": "astro build",
+    "build:dev": "ENV_NAME=dev astro build",
+    "build:qa": "ENV_NAME=qa astro build",
+    "build:prod": "ENV_NAME=prod astro build",
+    "build:all": "npm run build:dev && npm run build:qa && npm run build:prod",
+    "preview": "ENV_NAME=prod astro preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "astro check",
+    "links": "node scripts/check-links.mjs",
+    "dora": "node scripts/dora.mjs",
+    "check": "npm run lint && npm run format:check && npm run typecheck"
+  },
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "astro": "^7.2.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.2.0",
+    "eslint": "^10.8.1",
+    "eslint-plugin-astro": "^1.7.0",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

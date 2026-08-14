@@ -1,0 +1,168 @@
+---
+import { ENV, BUILD } from '../lib/env';
+import { FLAGS } from '../lib/flags';
+
+// Sandbox and Test only. Production gets the quiet footer stamp instead.
+const rows = [
+  { k: 'environment', v: `${ENV.name} (${ENV.key})` },
+  { k: 'branch', v: BUILD.branch },
+  { k: 'commit', v: BUILD.shortSha, href: BUILD.commitUrl },
+  { k: 'built', v: BUILD.time.replace('T', ' ').slice(0, 19) + 'Z' },
+  { k: 'run', v: BUILD.runNumber ? `#${BUILD.runNumber}` : 'local', href: BUILD.runUrl },
+  { k: 'base path', v: import.meta.env.BASE_URL },
+];
+
+const flagRows = Object.entries(FLAGS);
+---
+
+<aside class="build-panel" data-build-panel>
+  <button type="button" class="toggle" aria-expanded="false" aria-controls="build-body">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="mono">build info</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="m6 15 6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+    </svg>
+  </button>
+
+  <div class="body" id="build-body" hidden>
+    <dl>
+      {
+        rows.map((r) => (
+          <>
+            <dt>{r.k}</dt>
+            <dd>
+              {r.href ? (
+                <a href={r.href} rel="noopener">
+                  {r.v}
+                </a>
+              ) : (
+                r.v
+              )}
+            </dd>
+          </>
+        ))
+      }
+    </dl>
+    <p class="head">feature flags</p>
+    <ul>
+      {
+        flagRows.map(([name, on]) => (
+          <li>
+            <span class={on ? 'on' : 'off'} aria-hidden="true">
+              {on ? '●' : '○'}
+            </span>
+            <span>{name}</span>
+            <span class="val">{String(on)}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</aside>
+
+<script>
+  const panel = document.querySelector('[data-build-panel]');
+  const toggle = panel?.querySelector('button');
+  const body = panel?.querySelector<HTMLElement>('.body');
+  toggle?.addEventListener('click', () => {
+    if (!body) return;
+    const willOpen = Boolean(body.hidden);
+    body.hidden = !willOpen;
+    toggle.setAttribute('aria-expanded', String(willOpen));
+    panel?.classList.toggle('is-open', willOpen);
+  });
+</script>
+
+<style>
+  .build-panel {
+    position: fixed;
+    right: 0.9rem;
+    bottom: 0.9rem;
+    z-index: 70;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    max-width: min(320px, calc(100vw - 1.8rem));
+    overflow: hidden;
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    cursor: pointer;
+  }
+  .toggle:hover {
+    color: var(--text);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .toggle svg {
+    margin-left: auto;
+    transition: transform 0.15s ease;
+  }
+  .is-open .toggle svg {
+    transform: rotate(180deg);
+  }
+  .body {
+    border-top: 1px solid var(--border);
+    padding: 0.6rem;
+    max-height: 60vh;
+    overflow: auto;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.15rem 0.7rem;
+    margin: 0 0 0.7rem;
+  }
+  dt {
+    color: var(--text-faint);
+  }
+  dd {
+    margin: 0;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  dd a {
+    color: var(--accent-text);
+  }
+  .head {
+    color: var(--text-faint);
+    margin: 0 0 0.3rem;
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.15rem;
+  }
+  li {
+    display: grid;
+    grid-template-columns: 1rem 1fr auto;
+    gap: 0.4rem;
+    align-items: baseline;
+  }
+  .on {
+    color: var(--accent);
+  }
+  .off {
+    color: var(--text-faint);
+  }
+  .val {
+    color: var(--text-faint);
+  }
+</style>

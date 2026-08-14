@@ -1,0 +1,77 @@
+name: Agentic review
+
+# An agent in the review phase of the SDLC. Deterministic checks in ci.yml
+# catch what a machine can catch mechanically; this reads the change for intent.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  # The secrets context is not available in a job-level `if`, so the presence
+  # of the key is resolved here and gated on downstream. Without a key the
+  # review job is skipped rather than failed.
+  check-key:
+    name: Is the agent configured
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is set. Running the agentic review."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is not set. Skipping the agentic review."
+          fi
+
+  review:
+    name: Claude review
+    needs: check-key
+    if: needs.check-key.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          track_progress: true
+          prompt: |
+            Review this pull request against the conventions of this repository.
+
+            This is a resume site built with Astro and deployed to three
+            environments (Sandbox, Test, Production) from three long-lived
+            branches (dev, qa, main).
+
+            Focus on, in order:
+
+            1. Internal links and asset references. Every one must go through
+               withBase() from src/lib/paths.ts. A bare absolute path such as
+               "/experience/" works in Production and breaks in Sandbox and
+               Test, which are served from subdirectories.
+            2. Feature flags. Content gated per environment belongs in
+               src/lib/flags.ts, not in ad hoc conditionals scattered through
+               components.
+            3. Content data. Resume content belongs in src/data/ as typed
+               modules, not hardcoded into page markup.
+            4. Accessibility. Semantic elements, alt text, label associations,
+               visible focus, and colour contrast in both light and dark themes.
+            5. Writing voice. Site copy must avoid em dashes, "not X, it's Y"
+               antithesis constructions, and marketing vocabulary such as
+               leverage, seamless, robust, elevate, unlock, or streamline.
+
+            Be concrete and brief. Point at specific lines. If the change looks
+            good, say so plainly rather than inventing problems.

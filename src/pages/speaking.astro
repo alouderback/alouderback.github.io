@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import TalkCard from '../components/TalkCard.astro';
+import { talks } from '../data/speaking';
+---
+
+<BaseLayout
+  title="Speaking"
+  description="Conference talks and panels on DevOps for Salesforce teams, including DevOps Dreamin' London 2025 and the Gearset Taking Control of Complex Orgs Summit."
+>
+  <section class="section wrap">
+    <span class="eyebrow">Speaking</span>
+    <h1>Talks and panels</h1>
+    <p class="lede">
+      Two sessions from the last year, both with Gearset. One on getting a whole team to own the
+      pipeline, one on where AI fits into governance for complex orgs.
+    </p>
+  </section>
+
+  <section class="section wrap">
+    <div class="talks">
+      {talks.map((talk) => <TalkCard talk={talk} />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .talks {
+    display: grid;
+    gap: 1.3rem;
+  }
+</style>

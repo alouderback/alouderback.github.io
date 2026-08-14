@@ -1,0 +1,33 @@
+name: Pipeline issue
+description: Something wrong with CI, a deploy, an environment, or the metrics
+title: 'pipeline: '
+labels: [pipeline]
+body:
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Sandbox (dev)
+        - Test (qa)
+        - Production (main)
+        - CI only, no deploy involved
+    validations:
+      required: true
+  - type: input
+    id: run
+    attributes:
+      label: Workflow run
+      description: Link to the failing run, if there is one.
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true

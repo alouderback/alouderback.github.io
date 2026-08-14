@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { pillars } from '../data/values';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/paths';
+---
+
+<BaseLayout
+  title="Values"
+  description="Three things I optimise for as a DevOps engineer: an integrated SDLC with agents in every phase, automation measured through DORA and value-based metrics, and development teams that are not worn down by their own tooling."
+>
+  <section class="section wrap">
+    <span class="eyebrow">Values</span>
+    <h1>What I optimise for</h1>
+    <p class="lede">
+      Three things, in the order I tend to reach for them. The headline on the front page is "{
+        profile.headline
+      }", and this page is what that means in practice.
+    </p>
+  </section>
+
+  {
+    pillars.map((p, i) => (
+      <section class="section wrap pillar" id={p.id}>
+        <div class="grid2">
+          <div class="left">
+            <span class="num mono">{String(i + 1).padStart(2, '0')}</span>
+            <h2>{p.title}</h2>
+            <p class="short">{p.short}</p>
+          </div>
+          <div class="right">
+            {p.body.map((para) => (
+              <p>{para}</p>
+            ))}
+            <ul class="evidence">
+              {p.evidence.map((e) => (
+                <li>
+                  <span class="e-label">{e.label}</span>
+                  <span class="e-detail">{e.detail}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    ))
+  }
+
+  <section class="section wrap">
+    <div class="closing card">
+      <h2>Seeing it run</h2>
+      <p>
+        This site is built the way I would build a delivery pipeline at work. Three long-lived
+        branches, three deployed environments, promotion by pull request, automated checks that gate
+        the merge, and DORA metrics computed from the deployment history.
+      </p>
+      <a class="btn btn--primary" href={withBase('/pipeline/')}>Look at the pipeline</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .grid2 {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--accent-text);
+    letter-spacing: 0.1em;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .left h2 {
+    font-size: 1.5rem;
+    line-height: 1.28;
+  }
+  .short {
+    margin: 0.8rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+  .right p {
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--text-muted);
+  }
+  .right p:first-child {
+    color: var(--text);
+  }
+  .evidence {
+    list-style: none;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.8rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.2rem;
+  }
+  .evidence li {
+    display: grid;
+    grid-template-columns: minmax(150px, 210px) 1fr;
+    gap: 0.2rem 1.2rem;
+    align-items: baseline;
+  }
+  .e-label {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--accent-text);
+  }
+  .e-detail {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+
+  .closing {
+    padding: 2rem;
+  }
+  .closing h2 {
+    margin-bottom: 0.7rem;
+  }
+  .closing p {
+    color: var(--text-muted);
+    max-width: 62ch;
+  }
+
+  @media (max-width: 800px) {
+    .grid2 {
+      grid-template-columns: 1fr;
+      gap: 1.3rem;
+    }
+    .evidence li {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

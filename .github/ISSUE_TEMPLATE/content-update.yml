@@ -1,0 +1,31 @@
+name: Content update
+description: New role, talk, award, or something to change in the site copy
+title: 'content: '
+labels: [content]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: What needs updating
+      options:
+        - Experience or role
+        - Key skills
+        - Speaking
+        - Values
+        - Things I'm into
+        - Contact details
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: The change
+      description: What it says now, and what it should say.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Link to the talk, certification, or announcement, if there is one.

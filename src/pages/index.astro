@@ -1,0 +1,272 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CoverCarousel from '../components/CoverCarousel.astro';
+import { profile } from '../data/profile';
+import { pillars } from '../data/values';
+import { skillGroups } from '../data/skills';
+import { withBase } from '../lib/paths';
+import { flag } from '../lib/flags';
+import { ENV } from '../lib/env';
+---
+
+<BaseLayout title="Salesforce DevOps Engineer" description={profile.summary}>
+  <section class="hero wrap">
+    <span class="eyebrow">{profile.role} · {profile.company}</span>
+    <h1>{profile.name}</h1>
+    <p class="tagline">{profile.headline}</p>
+    <p class="lede">{profile.summary}</p>
+
+    <div class="cta">
+      <a class="btn btn--primary" href={withBase('/experience/')}>See the work</a>
+      <a class="btn" href={withBase('/pipeline/')}>How this site ships</a>
+      <a class="btn" href={withBase(profile.resumePdf)}>Resume (PDF)</a>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <ul class="stats">
+      {
+        profile.stats.map((s) => (
+          <li>
+            <span class="v">{s.value}</span>
+            <span class="l">{s.label}</span>
+            <span class="c">{s.context}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="section wrap">
+    <span class="eyebrow">What I work with</span>
+    <h2>Key skills</h2>
+    <p class="lede">
+      The toolchain behind the numbers above. Full detail sits on the experience page.
+    </p>
+
+    <ul class="skill-strip">
+      {
+        skillGroups.map((g) => (
+          <li>
+            <a href={withBase(`/experience/#${g.id}`)}>
+              <span class="sg-name">{g.name}</span>
+              <span class="sg-items">{g.items.map((i) => i.name).join(' · ')}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="section wrap">
+    <span class="eyebrow">How I work</span>
+    <h2>What I optimise for</h2>
+    <div class="pillars">
+      {
+        pillars.map((p, i) => (
+          <a class="pillar card" href={withBase(`/values/#${p.id}`)}>
+            <span class="pnum mono">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{p.title}</h3>
+            <p>{p.short}</p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    flag('showWipSections') && (
+      <section class="section wrap">
+        <div class="lab">
+          <div class="lab-head">
+            <span class="tag tag--accent">Work in progress</span>
+            <span class="mono faint">visible in {ENV.name} only</span>
+          </div>
+          <h2>The Lab</h2>
+          <p class="lede">
+            This block is gated behind the <code>showWipSections</code> flag, which is on in Sandbox
+            and off everywhere else. It exists to prove the three environments are genuinely
+            different builds rather than the same site in three colours. Anything drafted here gets
+            promoted to Test and then Production by flipping the flag, which is the same path a real
+            feature takes.
+          </p>
+          <ul class="lab-list">
+            <li>A writeup of the Own Secure to Gearset Backup migration.</li>
+            <li>Notes from the Center of Excellence dashboard build.</li>
+            <li>A longer piece on where agents actually belong in a release process.</li>
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section wrap">
+    <CoverCarousel />
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: clamp(3rem, 9vw, 6rem) clamp(2rem, 5vw, 3rem);
+  }
+  .tagline {
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 0.85rem + 0.6vw, 1.25rem);
+    color: var(--accent-text);
+    margin: 0.55rem 0 1.2rem;
+    letter-spacing: -0.01em;
+  }
+  .hero .lede {
+    font-size: 1.12rem;
+    line-height: 1.7;
+  }
+  .cta {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-top: 1.8rem;
+  }
+
+  .stats {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem 1rem;
+  }
+  .stats li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--accent);
+  }
+  .stats .v {
+    font-size: 2rem;
+    font-weight: 680;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
+  }
+  .stats .l {
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .stats .c {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    margin-top: 0.15rem;
+  }
+
+  .skill-strip {
+    list-style: none;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+  }
+  .skill-strip a {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) 1fr;
+    gap: 0.4rem 1.4rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    text-decoration: none;
+    color: inherit;
+    align-items: baseline;
+  }
+  .skill-strip a:hover {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+  }
+  .sg-name {
+    font-weight: 600;
+    font-size: 0.96rem;
+  }
+  .sg-items {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  @media (max-width: 700px) {
+    .skill-strip a {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1.6rem;
+  }
+  .pillar {
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: border-color 0.15s ease;
+  }
+  .pillar:hover {
+    border-color: var(--accent);
+  }
+  .pnum {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--accent-text);
+    letter-spacing: 0.08em;
+  }
+  .pillar h3 {
+    font-size: 1.02rem;
+    line-height: 1.35;
+  }
+  .pillar p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .lab {
+    border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+    border-radius: var(--radius-lg);
+    background: var(--accent-soft);
+    padding: 1.6rem;
+  }
+  .lab-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    flex-wrap: wrap;
+  }
+  .lab .faint {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+  }
+  .lab code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+  .lab-list {
+    margin: 1rem 0 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.35rem;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+  }
+  .lab-list li::marker {
+    color: var(--accent);
+  }
+</style>

@@ -1,0 +1,113 @@
+name: Deploy
+
+# A merge into a long-lived branch deploys that environment. Each environment
+# writes only its own folder on gh-pages, so a broken Sandbox build can never
+# take Production down with it.
+on:
+  push:
+    branches: [dev, qa, main]
+  workflow_dispatch:
+
+# Serialised rather than cancelled: two publishes must not race for the branch,
+# and cancelling one halfway would leave gh-pages half written.
+concurrency:
+  group: publish-gh-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  resolve:
+    name: Resolve environment
+    runs-on: ubuntu-latest
+    outputs:
+      env_key: ${{ steps.map.outputs.env_key }}
+      env_name: ${{ steps.map.outputs.env_name }}
+      gh_environment: ${{ steps.map.outputs.gh_environment }}
+      url: ${{ steps.map.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Map branch to environment
+        id: map
+        run: |
+          node --input-type=module -e "
+            import { BRANCH_TO_ENV, ENVIRONMENTS, urlFor } from './site.config.mjs';
+            import { appendFileSync } from 'node:fs';
+            const branch = process.env.GITHUB_REF_NAME;
+            const key = BRANCH_TO_ENV[branch];
+            if (!key) {
+              console.error(\`Branch '\${branch}' does not own an environment.\`);
+              process.exit(1);
+            }
+            const env = ENVIRONMENTS[key];
+            appendFileSync(process.env.GITHUB_OUTPUT, [
+              \`env_key=\${key}\`,
+              \`env_name=\${env.name}\`,
+              \`gh_environment=\${env.ghEnvironment}\`,
+              \`url=\${urlFor(key)}\`,
+            ].join('\n') + '\n');
+            console.log(\`\${branch} -> \${env.name} at \${urlFor(key)}\`);
+          "
+
+  publish:
+    name: Build and publish ${{ needs.resolve.outputs.env_name }}
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build ${{ needs.resolve.outputs.env_name }}
+        run: npm run build
+        env:
+          ENV_NAME: ${{ needs.resolve.outputs.env_key }}
+
+      - name: Check out the published site
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Configure git
+        working-directory: gh-pages
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Publish
+        run: bash scripts/publish-env.sh "${{ needs.resolve.outputs.env_key }}" gh-pages
+
+  record:
+    name: Record deployment
+    needs: [resolve, publish]
+    runs-on: ubuntu-latest
+    # This is what puts the deploy in the repository's Environments tab with a
+    # real history. Protection rules on the production environment apply here.
+    environment:
+      name: ${{ needs.resolve.outputs.gh_environment }}
+      url: ${{ needs.resolve.outputs.url }}
+    steps:
+      - name: Summary
+        run: |
+          {
+            echo "### ${{ needs.resolve.outputs.env_name }} deployed"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Environment | ${{ needs.resolve.outputs.env_name }} |"
+            echo "| Branch | \`${{ github.ref_name }}\` |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| URL | ${{ needs.resolve.outputs.url }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

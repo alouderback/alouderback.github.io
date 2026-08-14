@@ -1,0 +1,131 @@
+---
+import type { Role } from '../data/experience';
+
+interface Props {
+  roles: Role[];
+}
+
+const { roles } = Astro.props;
+---
+
+<ol class="timeline">
+  {
+    roles.map((role) => (
+      <li class="entry" id={role.id}>
+        <div class="marker" aria-hidden="true">
+          <span class={role.current ? 'node node--current' : 'node'} />
+        </div>
+        <div class="body">
+          <div class="top">
+            <h3>{role.title}</h3>
+            {role.current && <span class="tag tag--accent">Current</span>}
+          </div>
+          <p class="org">
+            {role.org}
+            {role.team && <span class="team"> · {role.team}</span>}
+          </p>
+          <p class="period mono">
+            {role.start} to {role.end}
+            {role.location && <> · {role.location}</>}
+          </p>
+          {role.detail && <p class="detail">{role.detail}</p>}
+          <ul class="bullets">
+            {role.bullets.map((b) => (
+              <li>{b}</li>
+            ))}
+          </ul>
+        </div>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2.2rem;
+  }
+  .entry {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 1.1rem;
+  }
+  .marker {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+  .marker::before {
+    content: '';
+    position: absolute;
+    top: 16px;
+    bottom: -2.2rem;
+    width: 1px;
+    background: var(--border);
+  }
+  .entry:last-child .marker::before {
+    display: none;
+  }
+  .node {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--border-strong);
+    margin-top: 7px;
+    z-index: 1;
+  }
+  .node--current {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.18rem;
+  }
+  .org {
+    margin: 0.15rem 0 0;
+    font-weight: 550;
+    color: var(--text);
+  }
+  .team {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .period {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-faint);
+  }
+  .detail {
+    margin: 0.5rem 0 0;
+    font-size: 0.87rem;
+    color: var(--text-muted);
+  }
+  .bullets {
+    margin: 0.85rem 0 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.45rem;
+  }
+  .bullets li {
+    color: var(--text-muted);
+    font-size: 0.93rem;
+    line-height: 1.6;
+    padding-left: 0.2rem;
+  }
+  .bullets li::marker {
+    color: var(--accent);
+  }
+</style>

@@ -1,0 +1,445 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PipelineDiagram from '../components/PipelineDiagram.astro';
+import MetricCard from '../components/MetricCard.astro';
+import { ALL_ENVIRONMENTS, ENV, BUILD, DORA_URL } from '../lib/env';
+import { FLAG_MATRIX } from '../lib/flags';
+import { flag } from '../lib/flags';
+import doraSnapshot from '../data/dora.json';
+
+const flagNames = Object.keys(FLAG_MATRIX) as (keyof typeof FLAG_MATRIX)[];
+
+const workflows = [
+  {
+    file: 'ci.yml',
+    trigger: 'Pull requests, and pushes to dev, qa, main',
+    does: 'Lint, format check, typecheck, then build all three environments and check every internal link.',
+  },
+  {
+    file: 'deploy.yml',
+    trigger: 'Push to dev, qa, or main',
+    does: 'Builds the environment that branch owns and publishes it into its own folder on gh-pages, then records a GitHub deployment.',
+  },
+  {
+    file: 'promote.yml',
+    trigger: 'Manual',
+    does: 'Opens a promotion pull request, dev into qa or qa into main, with the commit list being promoted.',
+  },
+  {
+    file: 'agentic-review.yml',
+    trigger: 'Pull requests',
+    does: 'Claude reviews the diff and comments. Skipped cleanly when no API key is configured.',
+  },
+  {
+    file: 'agentic-release-notes.yml',
+    trigger: 'Successful Production deploy',
+    does: 'Writes release notes and cuts a GitHub Release. Falls back to generated notes without a key.',
+  },
+  {
+    file: 'dora.yml',
+    trigger: 'Nightly, and after each Production deploy',
+    does: 'Computes DORA metrics from the deployment history and publishes them for this page to read.',
+  },
+];
+
+const metricMeta = [
+  { key: 'deploymentFrequency', label: 'Deployment frequency' },
+  { key: 'leadTimeForChanges', label: 'Lead time for changes' },
+  { key: 'changeFailureRate', label: 'Change failure rate' },
+  { key: 'timeToRestore', label: 'Time to restore' },
+] as const;
+
+type MetricValue = { value: number | null; unit: string; band: string | null };
+const metrics = doraSnapshot.metrics as Record<string, MetricValue>;
+---
+
+<BaseLayout
+  title="Pipeline"
+  description="How this site ships: three long-lived branches, three deployed environments, promotion by pull request, and DORA metrics computed from the deployment history."
+>
+  <section class="section wrap">
+    <span class="eyebrow">Pipeline</span>
+    <h1>How this site ships</h1>
+    <p class="lede">
+      One codebase, three long-lived branches, three deployed environments. Merging into a
+      long-lived branch deploys that environment. Moving between environments takes a promotion pull
+      request, so the gate stays visible. This is the same shape as the Salesforce pipeline I run at
+      work, built with the tools GitHub gives you for free.
+    </p>
+  </section>
+
+  <section class="section wrap">
+    <PipelineDiagram />
+  </section>
+
+  <section class="section wrap" id="environments">
+    <span class="eyebrow">Environments</span>
+    <h2>Where each branch lands</h2>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Environment</th>
+            <th>Branch</th>
+            <th>Salesforce analogue</th>
+            <th>URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            ALL_ENVIRONMENTS.map((e) => (
+              <tr class={e.isCurrent ? 'is-current' : undefined}>
+                <td>
+                  <span class={`sw sw--${e.key}`} aria-hidden="true" />
+                  {e.name}
+                  {e.isCurrent && <span class="tag tag--accent">you are here</span>}
+                </td>
+                <td class="mono">{e.branch}</td>
+                <td class="muted">{e.sfAnalogue}</td>
+                <td>
+                  <a class="mono" href={e.url}>
+                    {e.url.replace(/^https:\/\//, '')}
+                  </a>
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section wrap" id="flags">
+    <span class="eyebrow">Feature flags</span>
+    <h2>What actually differs between environments</h2>
+    <p class="lede">
+      The three deployments are different builds, not the same build painted three colours. Content
+      is gated here, and a flag only reaches Production after it has been promoted through Sandbox
+      and Test.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Flag</th>
+            <th>Sandbox</th>
+            <th>Test</th>
+            <th>Production</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            flagNames.map((name) => (
+              <tr>
+                <td class="mono">{name}</td>
+                {(['dev', 'qa', 'prod'] as const).map((k) => (
+                  <td class="center">
+                    <span class={FLAG_MATRIX[name][k] ? 'yes' : 'no'}>
+                      {FLAG_MATRIX[name][k] ? 'on' : 'off'}
+                    </span>
+                  </td>
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section wrap" id="workflows">
+    <span class="eyebrow">Automation</span>
+    <h2>The workflows behind it</h2>
+    <ul class="workflows">
+      {
+        workflows.map((w) => (
+          <li>
+            <span class="wf-file mono">{w.file}</span>
+            <span class="wf-trigger mono">{w.trigger}</span>
+            <span class="wf-does">{w.does}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  {
+    flag('showDoraDashboard') && (
+      <section class="section wrap" id="dora">
+        <span class="eyebrow">Metrics</span>
+        <h2>DORA metrics for this repository</h2>
+        <p class="lede">
+          Computed from this repository's own deployment history by <code>dora.yml</code>, not typed
+          in by hand. Numbers appear once the pipeline has enough deployments to measure.
+        </p>
+
+        <div class="metrics" data-dora-grid>
+          {metricMeta.map((m) => {
+            const metric = metrics[m.key];
+            return (
+              <div data-metric={m.key}>
+                <MetricCard
+                  label={m.label}
+                  value={metric?.value === null ? 'pending' : String(metric.value)}
+                  unit={metric?.value === null ? undefined : metric.unit}
+                  band={(metric?.band as 'elite' | null) ?? null}
+                  detail={metric?.value === null ? 'Waiting on the first deployments.' : undefined}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <p class="generated mono" data-dora-generated>
+          {doraSnapshot.generatedAt
+            ? `Generated ${doraSnapshot.generatedAt}`
+            : 'Not yet generated. The nightly job publishes the first set.'}
+        </p>
+      </section>
+    )
+  }
+
+  <section class="section wrap" id="this-build">
+    <span class="eyebrow">This build</span>
+    <h2>What produced the page you are reading</h2>
+    <dl class="build">
+      <div>
+        <dt>Environment</dt>
+        <dd>{ENV.name}</dd>
+      </div>
+      <div>
+        <dt>Branch</dt>
+        <dd class="mono">{BUILD.branch}</dd>
+      </div>
+      <div>
+        <dt>Commit</dt>
+        <dd>
+          {
+            BUILD.commitUrl ? (
+              <a class="mono" href={BUILD.commitUrl} rel="noopener">
+                {BUILD.shortSha}
+              </a>
+            ) : (
+              <span class="mono">{BUILD.shortSha}</span>
+            )
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Built at</dt>
+        <dd class="mono">{BUILD.time.replace('T', ' ').slice(0, 19)}Z</dd>
+      </div>
+      <div>
+        <dt>Workflow run</dt>
+        <dd>
+          {
+            BUILD.runUrl ? (
+              <a class="mono" href={BUILD.runUrl} rel="noopener">
+                #{BUILD.runNumber}
+              </a>
+            ) : (
+              <span class="mono">local build</span>
+            )
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Source</dt>
+        <dd>
+          <a class="mono" href={BUILD.repoUrl} rel="noopener"
+            >{BUILD.repoUrl.replace('https://', '')}</a
+          >
+        </dd>
+      </div>
+    </dl>
+  </section>
+</BaseLayout>
+
+<script is:inline define:vars={{ DORA_URL }}>
+  // The metrics file is published to the Pages root by dora.yml, so all three
+  // environments read the same numbers. The build-time snapshot is the fallback.
+  const grid = document.querySelector('[data-dora-grid]');
+  if (grid) {
+    fetch(DORA_URL, { cache: 'no-cache' })
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+      .then((data) => {
+        if (!data?.metrics) return;
+        for (const [key, metric] of Object.entries(data.metrics)) {
+          const holder = grid.querySelector(`[data-metric="${key}"]`);
+          if (!holder || metric?.value === null || metric?.value === undefined) continue;
+          const valueEl = holder.querySelector('.value');
+          if (valueEl) {
+            valueEl.textContent = String(metric.value);
+            if (metric.unit) {
+              const unit = document.createElement('span');
+              unit.className = 'unit';
+              unit.textContent = metric.unit;
+              valueEl.appendChild(unit);
+            }
+          }
+          const detail = holder.querySelector('.detail');
+          if (detail) detail.remove();
+        }
+        const stamp = document.querySelector('[data-dora-generated]');
+        if (stamp && data.generatedAt) stamp.textContent = `Generated ${data.generatedAt}`;
+      })
+      .catch(() => {
+        /* keep the build-time snapshot */
+      });
+  }
+</script>
+
+<style>
+  .table-scroll {
+    overflow-x: auto;
+    margin-top: 1.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 560px;
+    font-size: 0.9rem;
+  }
+  th,
+  td {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: var(--bg-subtle);
+    font-weight: 500;
+  }
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  tr.is-current {
+    background: var(--accent-soft);
+  }
+  td .tag {
+    margin-left: 0.5rem;
+  }
+  .center {
+    text-align: center;
+  }
+  .sw {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    margin-right: 0.5rem;
+  }
+  .sw--dev {
+    background: #8b5cf6;
+  }
+  .sw--qa {
+    background: #f59e0b;
+  }
+  .sw--prod {
+    background: #14b8a6;
+  }
+  .yes {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--accent-text);
+  }
+  .no {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text-faint);
+  }
+
+  .workflows {
+    list-style: none;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .workflows li {
+    display: grid;
+    grid-template-columns: 200px 220px 1fr;
+    gap: 0.3rem 1.3rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    align-items: baseline;
+  }
+  .wf-file {
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    color: var(--accent-text);
+    font-weight: 500;
+  }
+  .wf-trigger {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-faint);
+  }
+  .wf-does {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  @media (max-width: 860px) {
+    .workflows li {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin-top: 1.7rem;
+  }
+  .generated {
+    margin-top: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--text-faint);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+
+  .build {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.1rem;
+    margin-top: 1.7rem;
+  }
+  .build > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--border-strong);
+  }
+  dt {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  dd {
+    margin: 0;
+    font-size: 0.93rem;
+    overflow-wrap: anywhere;
+  }
+</style>

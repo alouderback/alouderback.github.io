@@ -1,0 +1,162 @@
+---
+import type { Talk } from '../data/speaking';
+
+interface Props {
+  talk: Talk;
+}
+
+const { talk } = Astro.props;
+// Wistia's own embed host. If it ever fails to load, the link under the frame
+// still gets the reader to the recording.
+const embed = `https://fast.wistia.net/embed/iframe/${talk.wistiaId}?videoFoam=true`;
+---
+
+<article class="talk card" id={talk.id}>
+  <div class="video">
+    <iframe
+      src={embed}
+      title={`${talk.title}, ${talk.event}`}
+      loading="lazy"
+      allow="autoplay; fullscreen"
+      allowfullscreen></iframe>
+  </div>
+
+  <div class="body">
+    <div class="tags">
+      <span class="tag tag--accent">{talk.kind}</span>
+      <span class="tag">{talk.host}</span>
+      <span class="tag">{talk.location}</span>
+    </div>
+
+    <h3>{talk.title}</h3>
+    <p class="event">
+      {talk.event} · <time datetime={talk.isoDate}>{talk.date}</time>
+    </p>
+    <p class="summary">{talk.summary}</p>
+
+    <ul class="bullets">
+      {talk.bullets.map((b) => <li>{b}</li>)}
+    </ul>
+
+    {
+      talk.withSpeakers && (
+        <div class="panelists">
+          <p class="eyebrow">On the panel</p>
+          <ul>
+            {talk.withSpeakers.map((s) => (
+              <li>
+                <span class="pname">{s.name}</span>
+                <span class="prole">{s.role}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )
+    }
+
+    <a class="btn" href={talk.url} rel="noopener">
+      Watch the recording
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M7 17 17 7M9 7h8v8"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </svg>
+    </a>
+  </div>
+</article>
+
+<style>
+  .talk {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 1.6rem;
+    padding: 1.5rem;
+    align-items: start;
+  }
+  .video {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+  }
+  .video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .tags {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.7rem;
+  }
+  h3 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+  .event {
+    margin: 0.3rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+  .summary {
+    margin: 0.9rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .bullets {
+    margin: 0.9rem 0 0;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .bullets li {
+    font-size: 0.89rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .bullets li::marker {
+    color: var(--accent);
+  }
+  .panelists {
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .panelists ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .panelists li {
+    display: flex;
+    flex-direction: column;
+  }
+  .pname {
+    font-size: 0.87rem;
+    font-weight: 550;
+  }
+  .prole {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+  }
+  .btn {
+    margin-top: 1.3rem;
+  }
+  @media (max-width: 860px) {
+    .talk {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

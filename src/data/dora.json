@@ -1,0 +1,17 @@
+{
+  "generatedAt": null,
+  "windowDays": 90,
+  "repo": "alouderback/resume-site",
+  "metrics": {
+    "deploymentFrequency": { "value": null, "unit": "per week", "band": null },
+    "leadTimeForChanges": { "value": null, "unit": "hours", "band": null },
+    "changeFailureRate": { "value": null, "unit": "%", "band": null },
+    "timeToRestore": { "value": null, "unit": "hours", "band": null }
+  },
+  "deployments": {
+    "total": 0,
+    "successful": 0,
+    "failed": 0,
+    "byEnvironment": {}
+  }
+}

@@ -1,0 +1,101 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/paths';
+import { BUILD } from '../lib/env';
+
+const channels = [
+  {
+    label: 'Email',
+    value: profile.email,
+    href: `mailto:${profile.email}`,
+    note: 'Best way to reach me.',
+  },
+  {
+    label: 'GitHub',
+    value: `github.com/${profile.githubHandle}`,
+    href: profile.github,
+    note: 'Including the source for this site.',
+  },
+  {
+    label: 'Resume',
+    value: 'PDF download',
+    href: withBase(profile.resumePdf),
+    note: 'The one-page version, kept current.',
+  },
+];
+---
+
+<BaseLayout
+  title="Contact"
+  description={`Get in touch with ${profile.name}, Salesforce DevOps Engineer.`}
+>
+  <section class="section wrap">
+    <span class="eyebrow">Contact</span>
+    <h1>Get in touch</h1>
+    <p class="lede">
+      Happy to talk about Salesforce delivery pipelines, release management, or anything on the
+      values page. Also happy to talk about {' '}
+      <a href={withBase('/#into-heading')}>the books and games</a>.
+    </p>
+  </section>
+
+  <section class="section wrap">
+    <ul class="channels">
+      {
+        channels.map((c) => (
+          <li>
+            <a class="card" href={c.href} rel="noopener">
+              <span class="eyebrow">{c.label}</span>
+              <span class="value">{c.value}</span>
+              <span class="note">{c.note}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="fine">
+      Based in {profile.location}. This page is served from the {' '}
+      <a href={BUILD.repoUrl} rel="noopener">public repository</a> that builds it.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .channels {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .channels a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    transition: border-color 0.15s ease;
+  }
+  .channels a:hover {
+    border-color: var(--accent);
+  }
+  .value {
+    font-size: 1.02rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+  .note {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .fine {
+    margin-top: 2rem;
+    font-size: 0.87rem;
+    color: var(--text-faint);
+  }
+</style>

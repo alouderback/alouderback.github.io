@@ -1,0 +1,244 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SkillCard from '../components/SkillCard.astro';
+import Timeline from '../components/Timeline.astro';
+import { skillGroups } from '../data/skills';
+import { roles, leadership, askMeAbout } from '../data/experience';
+import { education, certifications, awards } from '../data/education';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/paths';
+---
+
+<BaseLayout
+  title="Experience"
+  description="Key skills, roles, and credentials. Gearset, Azure DevOps, GitHub, Jira and Jira Service Management, and the delivery work behind them."
+>
+  <section class="section wrap">
+    <span class="eyebrow">Experience</span>
+    <h1>What I have built, and what I built it with</h1>
+    <p class="lede">
+      Skills first, since that is what most people are scanning for. Roles and credentials follow.
+    </p>
+    <a class="btn" href={withBase(profile.resumePdf)}>Download the PDF resume</a>
+  </section>
+
+  <section class="section wrap" id="skills">
+    <span class="eyebrow">Key skills</span>
+    <h2>Toolchain</h2>
+    <p class="lede">Each entry is paired with the work it came out of.</p>
+
+    <div class="skills">
+      {skillGroups.map((group, i) => <SkillCard group={group} index={i} />)}
+    </div>
+  </section>
+
+  <section class="section wrap" id="roles">
+    <span class="eyebrow">Professional experience</span>
+    <h2>Roles</h2>
+    <div class="tl">
+      <Timeline roles={roles} />
+    </div>
+  </section>
+
+  <section class="section wrap" id="leadership">
+    <span class="eyebrow">Leadership</span>
+    <h2>Leading delivery</h2>
+    <div class="lead-grid">
+      {
+        leadership.map((entry) => (
+          <article class="card">
+            <h3>{entry.title}</h3>
+            <p class="org">{entry.org}</p>
+            <p class="period mono">
+              {entry.start} to {entry.end}
+            </p>
+            <ul>
+              {entry.bullets.map((b) => (
+                <li>{b}</li>
+              ))}
+            </ul>
+          </article>
+        ))
+      }
+      <article class="card">
+        <h3>Public speaking</h3>
+        <p class="org">Gearset events, 2025</p>
+        <p class="period mono">London and virtual</p>
+        <ul>
+          <li>
+            Presented <em>DevOps is a Team Sport</em> at DevOps Dreamin' London 2025 to hundreds of attendees.
+          </li>
+          <li>
+            Joined the <em>Speed, Security &amp; Governance in the AI Era</em> panel at the Taking Control
+            of Complex Orgs Summit.
+          </li>
+        </ul>
+        <a class="more" href={withBase('/speaking/')}>Watch both sessions</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="section wrap" id="credentials">
+    <span class="eyebrow">Credentials</span>
+    <h2>Education, certifications, and awards</h2>
+
+    <div class="cred-grid">
+      <div class="card">
+        <h3>Education</h3>
+        <ul class="plain">
+          {
+            education.map((e) => (
+              <li>
+                <span class="strong">{e.school}</span>
+                <span class="sub">{e.credential}</span>
+                <span class="meta mono">
+                  {e.detail} · {e.location} · {e.graduated}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Certifications</h3>
+        <ul class="plain">
+          {
+            certifications.map((c) => (
+              <li>
+                <span class="strong">{c.name}</span>
+                <span class="meta mono">{c.issuer}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Awards</h3>
+        <ul class="plain">
+          {
+            awards.map((a) => (
+              <li>
+                <span class="strong">{a.name}</span>
+                <span class="meta mono">{a.detail}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" id="ask-me-about">
+    <span class="eyebrow">Ask me about</span>
+    <h2>Other things worth a conversation</h2>
+    <ul class="ask">
+      {
+        askMeAbout.map((a) => (
+          <li>
+            <span class="strong">{a.title}</span>
+            <span class="sub">{a.detail}</span>
+            <span class="meta mono">{a.period}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1.7rem;
+  }
+  .tl {
+    margin-top: 1.8rem;
+  }
+
+  .lead-grid,
+  .cred-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 1rem;
+    margin-top: 1.7rem;
+  }
+  .lead-grid h3,
+  .cred-grid h3 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .org {
+    margin: 0.25rem 0 0;
+    font-weight: 550;
+    font-size: 0.9rem;
+  }
+  .period {
+    margin: 0.1rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.73rem;
+    color: var(--text-faint);
+  }
+  .lead-grid ul {
+    margin: 0.9rem 0 0;
+    padding-left: 1.05rem;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .lead-grid li {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .lead-grid li::marker {
+    color: var(--accent);
+  }
+  .more {
+    display: inline-block;
+    margin-top: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .plain {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.9rem;
+  }
+  .plain li,
+  .ask li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+  }
+  .strong {
+    font-weight: 600;
+    font-size: 0.93rem;
+  }
+  .sub {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+  }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    margin-top: 0.1rem;
+  }
+
+  .ask {
+    list-style: none;
+    margin: 1.6rem 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.1rem;
+  }
+  .ask li {
+    padding-left: 0.9rem;
+    border-left: 2px solid var(--accent);
+  }
+</style>

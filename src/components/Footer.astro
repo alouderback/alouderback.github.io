@@ -1,0 +1,89 @@
+---
+import { ENV, BUILD } from '../lib/env';
+import { profile } from '../data/profile';
+import { withBase } from '../lib/paths';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="wrap inner">
+    <div class="col">
+      <p class="name">{profile.name}</p>
+      <p class="muted small">{profile.role}, {profile.company}</p>
+    </div>
+
+    <nav class="col links" aria-label="Footer">
+      <a href={`mailto:${profile.email}`}>{profile.email}</a>
+      <a href={profile.github} rel="me noopener">github.com/{profile.githubHandle}</a>
+      <a href={withBase(profile.resumePdf)}>Resume (PDF)</a>
+      <a href={BUILD.repoUrl} rel="noopener">Source for this site</a>
+    </nav>
+
+    <div class="col stamp">
+      <span class="mono">
+        {ENV.name} · {BUILD.branch} · {BUILD.shortSha}
+      </span>
+      {
+        BUILD.runUrl && (
+          <a class="mono" href={BUILD.runUrl} rel="noopener">
+            build #{BUILD.runNumber}
+          </a>
+        )
+      }
+      <span class="mono faint">© {year}</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--border);
+    background: var(--bg-subtle);
+    padding-block: 2rem;
+    margin-top: 3rem;
+  }
+  .inner {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .name {
+    font-weight: 600;
+    margin: 0;
+  }
+  .small {
+    font-size: 0.87rem;
+    margin: 0;
+  }
+  .links a {
+    font-size: 0.87rem;
+    text-decoration: none;
+    color: var(--text-muted);
+  }
+  .links a:hover {
+    color: var(--accent-text);
+  }
+  .stamp {
+    align-items: flex-start;
+    gap: 0.15rem;
+  }
+  .stamp .mono {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    text-decoration: none;
+  }
+  .stamp a.mono:hover {
+    color: var(--accent-text);
+  }
+  .faint {
+    opacity: 0.7;
+  }
+</style>
