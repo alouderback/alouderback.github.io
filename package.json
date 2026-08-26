@@ -1,5 +1,5 @@
 {
-  "name": "resume-site",
+  "name": "alouderback-site",
   "version": "1.0.0",
   "description": "Alex Louderback's resume site, deployed through a three-environment CI/CD pipeline.",
   "scripts": {

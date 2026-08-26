@@ -44,7 +44,7 @@ vocabulary, short declarative sentences.
 ## Commands
 
 ```bash
-npm run dev          # Sandbox at localhost:4321/resume-site/dev/
+npm run dev          # Sandbox at localhost:4321/dev/
 npm run build:all    # all three environments into dist/<env>/
 npm run check        # lint, format check, typecheck
 npm run links        # internal link and asset check over dist/

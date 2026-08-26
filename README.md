@@ -1,4 +1,4 @@
-# resume-site
+# alouderback.github.io
 
 Alex Louderback's resume site, and the delivery pipeline that ships it.
 
@@ -7,11 +7,11 @@ environments, and promotion between them by pull request. It mirrors the Sandbox
 to UAT to Production model of a Salesforce release pipeline, built with what
 GitHub gives you for free.
 
-| Branch | Environment | Salesforce analogue          | URL                                            |
-| ------ | ----------- | ---------------------------- | ---------------------------------------------- |
-| `dev`  | Sandbox     | Developer sandbox            | https://alouderback.github.io/resume-site/dev/ |
-| `qa`   | Test        | Partial or Full Copy sandbox | https://alouderback.github.io/resume-site/qa/  |
-| `main` | Production  | Production org               | https://alouderback.github.io/resume-site/     |
+| Branch | Environment | Salesforce analogue          | URL                                |
+| ------ | ----------- | ---------------------------- | ---------------------------------- |
+| `dev`  | Sandbox     | Developer sandbox            | https://alouderback.github.io/dev/ |
+| `qa`   | Test        | Partial or Full Copy sandbox | https://alouderback.github.io/qa/  |
+| `main` | Production  | Production org               | https://alouderback.github.io/     |
 
 ## Running it locally
 
@@ -22,7 +22,7 @@ npm ci
 npm run dev
 ```
 
-That serves the Sandbox build at `http://localhost:4321/resume-site/dev/`. Use
+That serves the Sandbox build at `http://localhost:4321/dev/`. Use
 `npm run dev:qa` or `npm run dev:prod` to see the other two. They differ in more
 than colour, which is the point.
 
@@ -141,8 +141,9 @@ token with `contents: write` and `pull requests: write`, and add it as a
 
 ### Move Production to alouderback.com
 
-Everything works on the `github.io` URL as-is. To move Production to the custom
-domain:
+Everything works on the `github.io` URL as-is. Because the site already serves
+from the account root, moving to the custom domain is only a change of origin.
+To do it:
 
 1. At your DNS registrar, add four apex `A` records for `alouderback.com`:
 
@@ -161,7 +162,7 @@ domain:
    export const SITE = {
      origin: 'https://alouderback.com',
      pathPrefix: '',
-     repo: 'alouderback/resume-site',
+     repo: 'alouderback/alouderback.github.io',
    };
    ```
 
@@ -173,6 +174,10 @@ domain:
 Production then serves from `alouderback.com/`, Test from `alouderback.com/qa/`,
 and Sandbox from `alouderback.com/dev/`. Nothing else in the codebase changes.
 
+The site previously lived in a separate `resume-site` repository. It was moved
+here so Production owns the account root. The pre-existing contents of this
+repository are preserved on the `legacy-2023` branch.
+
 ### Require reviews before merging
 
 Branch protection currently requires passing status checks but not an approving
@@ -180,7 +185,7 @@ review, since a solo maintainer cannot approve their own pull request. To turn
 reviews on once someone else is contributing:
 
 ```bash
-gh api -X PUT repos/alouderback/resume-site/branches/main/protection/required_pull_request_reviews \
+gh api -X PUT repos/alouderback/alouderback.github.io/branches/main/protection/required_pull_request_reviews \
   -F required_approving_review_count=1
 ```
 

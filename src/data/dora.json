@@ -1,7 +1,7 @@
 {
   "generatedAt": null,
   "windowDays": 90,
-  "repo": "alouderback/resume-site",
+  "repo": "alouderback/alouderback.github.io",
   "metrics": {
     "deploymentFrequency": { "value": null, "unit": "per week", "band": null },
     "leadTimeForChanges": { "value": null, "unit": "hours", "band": null },

@@ -1,15 +1,17 @@
 /**
  * Single source of truth for where this site is served from.
  *
- * Phase 1 (now): GitHub Pages project URL.
- * Phase 2 (once DNS for alouderback.com resolves): change `origin` to
- * 'https://alouderback.com', change `pathPrefix` to '', and add a CNAME file to
- * the gh-pages branch. Nothing else in the codebase needs to change.
+ * The site is served from the account root, so `pathPrefix` is empty and
+ * Production owns `/`, Test `/qa/`, and Sandbox `/dev/`.
+ *
+ * To move to alouderback.com later: change `origin` to 'https://alouderback.com'
+ * and add a CNAME file to the gh-pages branch. `pathPrefix` already stays empty,
+ * so nothing else in the codebase changes.
  */
 export const SITE = {
   origin: 'https://alouderback.github.io',
-  pathPrefix: '/resume-site',
-  repo: 'alouderback/resume-site',
+  pathPrefix: '',
+  repo: 'alouderback/alouderback.github.io',
 };
 
 /**
