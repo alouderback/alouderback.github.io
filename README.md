@@ -7,11 +7,11 @@ environments, and promotion between them by pull request. It mirrors the Sandbox
 to UAT to Production model of a Salesforce release pipeline, built with what
 GitHub gives you for free.
 
-| Branch | Environment | Salesforce analogue          | URL                                |
-| ------ | ----------- | ---------------------------- | ---------------------------------- |
-| `dev`  | Sandbox     | Developer sandbox            | https://alouderback.github.io/dev/ |
-| `qa`   | Test        | Partial or Full Copy sandbox | https://alouderback.github.io/qa/  |
-| `main` | Production  | Production org               | https://alouderback.github.io/     |
+| Branch | Environment | Salesforce analogue          | URL                          |
+| ------ | ----------- | ---------------------------- | ---------------------------- |
+| `dev`  | Sandbox     | Developer sandbox            | https://alouderback.com/dev/ |
+| `qa`   | Test        | Partial or Full Copy sandbox | https://alouderback.com/qa/  |
+| `main` | Production  | Production org               | https://alouderback.com/     |
 
 ## Running it locally
 
