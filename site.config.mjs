@@ -1,15 +1,14 @@
 /**
  * Single source of truth for where this site is served from.
  *
- * The site is served from the account root, so `pathPrefix` is empty and
+ * Served from the root of the custom domain, so `pathPrefix` is empty and
  * Production owns `/`, Test `/qa/`, and Sandbox `/dev/`.
  *
- * To move to alouderback.com later: change `origin` to 'https://alouderback.com'
- * and add a CNAME file to the gh-pages branch. `pathPrefix` already stays empty,
- * so nothing else in the codebase changes.
+ * The CNAME file at the gh-pages root is what binds the domain to Pages.
+ * scripts/publish-env.sh preserves it, so a Production publish cannot drop it.
  */
 export const SITE = {
-  origin: 'https://alouderback.github.io',
+  origin: 'https://alouderback.com',
   pathPrefix: '',
   repo: 'alouderback/alouderback.github.io',
 };
