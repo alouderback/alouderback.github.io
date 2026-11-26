@@ -1,37 +1,37 @@
 {
-  "generatedAt": "2026-11-25T17:08:41.256Z",
+  "generatedAt": "2026-11-26T16:50:02.184Z",
   "windowDays": 90,
   "repo": "alouderback/alouderback.github.io",
   "metrics": {
     "deploymentFrequency": {
-      "value": 0.1,
+      "value": null,
       "unit": "per week",
-      "band": "low"
+      "band": null
     },
     "leadTimeForChanges": {
-      "value": 0,
+      "value": null,
       "unit": "hours",
-      "band": "elite"
+      "band": null
     },
     "changeFailureRate": {
-      "value": 0,
+      "value": null,
       "unit": "%",
-      "band": "elite"
+      "band": null
     },
     "timeToRestore": {
-      "value": 0,
+      "value": null,
       "unit": "hours",
-      "band": "elite"
+      "band": null
     }
   },
   "deployments": {
-    "total": 1,
-    "successful": 1,
+    "total": 0,
+    "successful": 0,
     "failed": 0,
     "byEnvironment": {
-      "dev": 1,
-      "qa": 1,
-      "production": 1
+      "dev": 0,
+      "qa": 0,
+      "production": 0
     }
   }
 }
